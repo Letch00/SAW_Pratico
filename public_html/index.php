@@ -1,27 +1,18 @@
-
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+$ligacao = new mysqli(
+    "localhost",
+    "root",
+    "",
+    "stand_automovel"
+);
 
-// Consultar todos os veículos
-try {
-
-    $stmt = $pdo->query("
-        SELECT id, brand, model, year, fuel, image
-        FROM vehicles
-        ORDER BY id DESC
-    ");
-
-    $vehicles = $stmt->fetchAll();
-
-} catch (PDOException $e) {
-
-    error_log($e->getMessage());
-
-    $vehicles = [];
-    $error = "Não foi possível carregar os veículos.";
-
+if ($ligacao->connect_error) {
+    die("Erro na ligação à base de dados.");
 }
+
+$sql = "SELECT * FROM vehicles";
+$resultado = $ligacao->query($sql);
 
 ?>
 
@@ -33,95 +24,68 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Stand Automóvel</title>
-
-    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 
 <body>
 
-    <header>
+    <h1>Stand Automóvel</h1>
 
-        <h1>Stand Automóvel</h1>
+    <h2>Veículos</h2>
 
-        <nav>
-            <a href="index.php">Início</a>
-            <a href="login.php">Iniciar Sessão</a>
-            <a href="register.php">Registar</a>
-        </nav>
+    <?php
 
-    </header>
+    if ($resultado->num_rows > 0) {
 
-    <main>
+        while ($veiculo = $resultado->fetch_assoc()) {
+    ?>
 
-        <section class="welcome">
+            <div>
 
-            <h2>Encontra o teu próximo automóvel</h2>
+                <h3>
+                    <?php
+                    echo htmlspecialchars($veiculo["brand"]);
+                    ?>
+                    <?php
+                    echo htmlspecialchars($veiculo["model"]);
+                    ?>
+                </h3>
 
-            <p>
-                Consulta os veículos disponíveis no nosso stand.
-            </p>
+                <p>
+                    Ano:
+                    <?php
+                    echo htmlspecialchars($veiculo["year"]);
+                    ?>
+                </p>
 
-        </section>
+                <p>
+                    Combustível:
+                    <?php
+                    echo htmlspecialchars($veiculo["fuel"]);
+                    ?>
+                </p>
 
-        <section class="vehicles">
+                <p>
+                    Quilómetros:
+                    <?php
+                    echo htmlspecialchars($veiculo["km"]);
+                    ?>
+                </p>
 
-            <h2>Os nossos veículos</h2>
+            </div>
 
-            <?php if (isset($error)): ?>
+    <?php
+        }
 
-                <p><?= htmlspecialchars($error) ?></p>
+    } else {
 
-            <?php elseif (empty($vehicles)): ?>
+        echo "<p>Não existem veículos registados.</p>";
 
-                <p>Não existem veículos registados.</p>
+    }
 
-            <?php else: ?>
+    $ligacao->close();
 
-                <div class="vehicle-list">
-
-                    <?php foreach ($vehicles as $vehicle): ?>
-
-                        <article class="vehicle-card">
-
-                            <?php if (!empty($vehicle['image'])): ?>
-
-                                <img
-                                    src="../uploads/vehicles/<?= htmlspecialchars(basename($vehicle['image'])) ?>"
-                                    alt="<?= htmlspecialchars($vehicle['brand'] . ' ' . $vehicle['model']) ?>"
-                                >
-
-                            <?php endif; ?>
-
-                            <h3>
-                                <?= htmlspecialchars($vehicle['brand']) ?>
-                                <?= htmlspecialchars($vehicle['model']) ?>
-                            </h3>
-
-                            <p>
-                                Ano: <?= htmlspecialchars((string) $vehicle['year']) ?>
-                            </p>
-
-                            <p>
-                                Combustível: <?= htmlspecialchars($vehicle['fuel']) ?>
-                            </p>
-
-                        </article>
-
-                    <?php endforeach; ?>
-
-                </div>
-
-            <?php endif; ?>
-
-        </section>
-
-    </main>
-
-    <footer>
-
-        <p>&copy; <?= date('Y') ?> Stand Automóvel</p>
-
-    </footer>
+    ?>
 
 </body>
+
 </html>
